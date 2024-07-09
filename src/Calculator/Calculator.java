@@ -2,104 +2,82 @@ package Calculator;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.lang.reflect.Array;
-
+import java.util.Vector;
 
 public class Calculator implements ActionListener {
 
-    int c,n;
-    String s1,s2,s3,s4,s5;
-    Frame frame;
-    Button b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,bPlus,bMinus,bMul,bDiv,bEqual,bClear;
-    Panel panel;
-    TextField t1;
-    GridLayout gl;
+    private final Vector<String> history = new Vector<>(10);
+    private final Vector<String> operations = new Vector<>();
+    private Frame frame;
+    private Panel buttonPanel, displayPanel;
+    private TextField inputTextField, operationTextField, resultTextField;
+    private static final int FRAME_WIDTH = 500;
+    private static final int FRAME_HEIGHT = 800;
+    private static final Font BUTTON_FONT = new Font("Arial", Font.BOLD, 18);
+    private static MenuBar menuBar;
 
-    int frameWidth = 400;
-    int frameHeight = 600;
+    private static final Color NUMBER_BUTTON_COLOR = new Color(255, 255, 255);
+    private static final Color NUMBER_BUTTON_TEXT_COLOR = new Color(78, 78, 78);
+    private static final Color OPERATOR_BUTTON_COLOR = new Color(19, 75, 180);
+    private static final Color OPERATOR_BUTTON_TEXT_COLOR = new Color(255, 255, 255);
+    private static final Color MAIN_TEXT_FIELD_COLOR = new Color(255, 255, 255);
+    private static final Color MAIN_TEXT_FIELD_TEXT_COLOR = new Color(0, 0, 0);
+    private static final Color SUB_TEXT_FIELD_COLOR = new Color(216, 216, 216);
+    private static final Color SUB_TEXT_FIELD_TEXT_COLOR = new Color(82, 82, 82);
 
     public Calculator() {
+        this.init();
+    }
+
+    private void init() {
         frame = new Frame("Calculator");
-        frame.setLayout(new GridLayout(4,4));
+        frame.setLayout(new GridLayout(2, 1));
+        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+
+        menuBar = new MenuBar();
+        Menu fileMenu = new Menu("File");
+        Menu editMenu = new Menu("Edit");
+        Menu helpMenu = new Menu("Help");
+        MenuItem NewMenuItem = new MenuItem("New");
+        MenuItem exitMenuItem = new MenuItem("Exit");
+        fileMenu.add(NewMenuItem);
+        fileMenu.add(exitMenuItem);
+        menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+        menuBar.add(helpMenu);
+        frame.setMenuBar(menuBar);
 
 
-        b0 = new Button("0");
-        b0.addActionListener(this);
+        operationTextField = createTextField(SUB_TEXT_FIELD_COLOR, SUB_TEXT_FIELD_TEXT_COLOR, 20);
+        resultTextField = createTextField(SUB_TEXT_FIELD_COLOR, SUB_TEXT_FIELD_TEXT_COLOR, 20);
+        inputTextField = createTextField(MAIN_TEXT_FIELD_COLOR, MAIN_TEXT_FIELD_TEXT_COLOR, 40);
 
-        b1 = new Button("1");
-        b1.addActionListener(this);
+        displayPanel = new Panel(new GridLayout(3, 1));
+        displayPanel.add(operationTextField);
+        displayPanel.add(resultTextField);
+        displayPanel.add(inputTextField);
+        frame.add(displayPanel);
 
-        b2 = new Button("2");
-        b2.addActionListener(this);
+        buttonPanel = new Panel();
+        buttonPanel.setLayout(new GridLayout(6, 4, 5, 5));
 
-        b3 = new Button("3");
-        b3.addActionListener(this);
+        String[] buttonLabels = {
+                "undo","redo","(",")",
+                "%", "√", "Clear", "<",
+                "7", "8", "9", "/",
+                "4", "5", "6", "*",
+                "1", "2", "3", "-",
+                ".", "0", "=", "+"
+        };
 
-        b4 = new Button("4");
-        b4.addActionListener(this);
+        for (String label : buttonLabels) {
+            Button button = createButton(label);
+            buttonPanel.add(button);
+        }
 
-        b5 = new Button("5");
-        b5.addActionListener(this);
-
-        b6 = new Button("6");
-        b6.addActionListener(this);
-
-        b7 = new Button("7");
-        b7.addActionListener(this);
-
-        b8 = new Button("8");
-        b8.addActionListener(this);
-
-        b9 = new Button("9");
-        b9.addActionListener(this);
-
-        bPlus = new Button("+");
-        bPlus.addActionListener(this);
-
-        bMinus = new Button("-");
-        bMinus.addActionListener(this);
-
-        bMul = new Button("*");
-        bMul.addActionListener(this);
-
-        bDiv = new Button("/");
-        bDiv.addActionListener(this);
-
-        bEqual = new Button("=");
-        bEqual.addActionListener(this);
-
-        bClear = new Button("C");
-        bClear.addActionListener(this);
-
-        t1 = new TextField(20);
-        t1.setSize(frameWidth,frameHeight/4);
-        frame.add(t1);
-
-        gl = new GridLayout(4,4);
-        panel = new Panel();
-        panel.setSize(frameWidth,frameHeight);
-        panel.setLayout(gl);
-        panel.add(b7);
-        panel.add(b8);
-        panel.add(b9);
-        panel.add(bDiv);
-        panel.add(b4);
-        panel.add(b5);
-        panel.add(b6);
-        panel.add(bMul);
-        panel.add(b1);
-        panel.add(b2);
-        panel.add(b3);
-        panel.add(bMinus);
-        panel.add(b0);
-        panel.add(bClear);
-        panel.add(bPlus);
-        panel.add(bEqual);
-        frame.add(panel);
-
-        frame.add(panel);
-        frame.setSize(frameWidth, frameHeight);
-        frame.setBackground(Color.LIGHT_GRAY);
+        frame.add(buttonPanel);
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -109,12 +87,36 @@ public class Calculator implements ActionListener {
         });
     }
 
+    private TextField createTextField(Color bgColor, Color fgColor, int fontSize) {
+        TextField textField = new TextField();
+        textField.setFont(new Font("Arial", Font.BOLD, fontSize));
+        textField.setBackground(bgColor);
+        textField.setForeground(fgColor);
+        textField.setFocusable(false);
+        textField.setEditable(false);
+        return textField;
+    }
+
+    private Button createButton(String label) {
+        Button button = new Button(label);
+        button.setFont(BUTTON_FONT);
+        if (label.matches("[0-9.]")) {
+            button.setBackground(NUMBER_BUTTON_COLOR);
+            button.setForeground(NUMBER_BUTTON_TEXT_COLOR);
+        } else {
+            button.setBackground(OPERATOR_BUTTON_COLOR);
+            button.setForeground(OPERATOR_BUTTON_TEXT_COLOR);
+        }
+        button.addActionListener(this);
+        return button;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-
+        String command = e.getActionCommand();
     }
 
     public static void main(String[] args) {
-        Calculator c = new Calculator();
+        new Calculator();
     }
 }
