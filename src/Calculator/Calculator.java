@@ -2,17 +2,18 @@ package Calculator;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Vector;
+import java.util.*;
 
 public class Calculator implements ActionListener {
 
     private final Vector<String> history = new Vector<>(10);
     private final Vector<String> operations = new Vector<>();
+    private String inputNumber = "";
     private Frame frame;
     private Panel buttonPanel, displayPanel;
     private TextField inputTextField, operationTextField, resultTextField;
-    private static final int FRAME_WIDTH = 500;
-    private static final int FRAME_HEIGHT = 800;
+    private static final int FRAME_WIDTH = 400;
+    private static final int FRAME_HEIGHT = 600;
     private static final Font BUTTON_FONT = new Font("Arial", Font.BOLD, 18);
     private static MenuBar menuBar;
 
@@ -25,29 +26,28 @@ public class Calculator implements ActionListener {
     private static final Color SUB_TEXT_FIELD_COLOR = new Color(216, 216, 216);
     private static final Color SUB_TEXT_FIELD_TEXT_COLOR = new Color(82, 82, 82);
 
+    private final String[] buttonLabels = {
+        "undo", "redo","+/-",   "mc",
+        "(",    ")",   "m+",   "m-",
+        "%",    "√",   "Clear","<",
+        "7",    "8",   "9",    "÷",
+        "4",    "5",   "6",    "×",
+        "1",    "2",   "3",    "-",
+        ".",    "0",   "=",    "+"
+    };
+
     public Calculator() {
         this.init();
     }
 
+    // Initialize the calculator
     private void init() {
         frame = new Frame("Calculator");
         frame.setLayout(new GridLayout(2, 1));
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
+        frame.setResizable(true);
 
-        menuBar = new MenuBar();
-        Menu fileMenu = new Menu("File");
-        Menu editMenu = new Menu("Edit");
-        Menu helpMenu = new Menu("Help");
-        MenuItem NewMenuItem = new MenuItem("New");
-        MenuItem exitMenuItem = new MenuItem("Exit");
-        fileMenu.add(NewMenuItem);
-        fileMenu.add(exitMenuItem);
-        menuBar.add(fileMenu);
-        menuBar.add(editMenu);
-        menuBar.add(helpMenu);
-        frame.setMenuBar(menuBar);
 
 
         operationTextField = createTextField(SUB_TEXT_FIELD_COLOR, SUB_TEXT_FIELD_TEXT_COLOR, 20);
@@ -61,16 +61,7 @@ public class Calculator implements ActionListener {
         frame.add(displayPanel);
 
         buttonPanel = new Panel();
-        buttonPanel.setLayout(new GridLayout(6, 4, 5, 5));
-
-        String[] buttonLabels = {
-                "undo","redo","(",")",
-                "%", "√", "Clear", "<",
-                "7", "8", "9", "/",
-                "4", "5", "6", "*",
-                "1", "2", "3", "-",
-                ".", "0", "=", "+"
-        };
+        buttonPanel.setLayout(new GridLayout(7, 4, 5, 5));
 
         for (String label : buttonLabels) {
             Button button = createButton(label);
@@ -86,7 +77,6 @@ public class Calculator implements ActionListener {
             }
         });
     }
-
     private TextField createTextField(Color bgColor, Color fgColor, int fontSize) {
         TextField textField = new TextField();
         textField.setFont(new Font("Arial", Font.BOLD, fontSize));
@@ -96,7 +86,6 @@ public class Calculator implements ActionListener {
         textField.setEditable(false);
         return textField;
     }
-
     private Button createButton(String label) {
         Button button = new Button(label);
         button.setFont(BUTTON_FONT);
@@ -111,10 +100,114 @@ public class Calculator implements ActionListener {
         return button;
     }
 
+
+
     @Override
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
+    public void actionPerformed(ActionEvent event) {
+
+        String command = event.getActionCommand();
+
+        // update Input
+        this.inputField(command);
+
+        // update vector
+        this.updateVector(command);
+
+        // Backspace
+        this.backspace(command);
+
+        // Clear
+        this.clear(command);
+
+        // Undo
+        this.undo(command);
+
+        // Redo
+        this.redo(command);
+
+        // Calculate
+        this.calculate(command);
+
+        // Display
+        this.display();
     }
+
+    // update Input Field
+    private void inputField(String command) {
+        if (command.matches("[0-9.]")) {
+            inputNumber = inputNumber + command;
+        }
+    }
+
+    private void updateVector(String command) {
+        if (command.matches("[-+×÷%=()√]")) {
+            if (!inputNumber.isEmpty()) {
+                operations.add(inputNumber);
+                if (!operations.lastElement().matches("[-.+÷%=(√]")) {
+                    operations.add(command);
+                }
+            }
+            inputNumber = "";
+        }
+    }
+
+    private void display() {
+        inputTextField.setText(inputNumber);
+        operationTextField.setText("");
+        for (String operation : operations) { operationTextField.setText(operationTextField.getText() + operation); }
+        System.out.println(operations);
+        System.out.println(history);
+    }
+
+    private void clear(String command) {
+        if (command.equals("Clear")) {
+            inputNumber = "";
+            operations.clear();
+            operationTextField.setText("");
+        }
+    }
+
+    private void backspace(String command) {
+        if (command.equals("<")) {
+            if (!inputNumber.isEmpty()) {
+                inputNumber = inputNumber.substring(0, inputNumber.length() - 1);
+            }
+            if (inputNumber.isEmpty()) {
+                inputNumber = "";
+            }
+        }
+    }
+
+    private void redo(String command) {
+        if (command.equals("redo")) {
+            if (!operations.isEmpty() || !(history.isEmpty()) ) {
+                operations.add(history.get(history.size() - 1));
+                try {
+                    history.remove(history.size() - 1);
+                } catch (Exception e) {
+                    history.clear();
+                }
+            }
+        }
+    }
+
+    private void undo(String command) {
+        if (command.equals("undo")) {
+            if (!operations.isEmpty()) {
+                history.add(operations.get(operations.size() - 1));
+                operations.remove(operations.size() - 1);
+            }
+        }
+
+    }
+
+    private void calculate(String command) {
+        if (command.equals("=")) {
+            System.out.println("CALCULATING");
+        }
+
+    }
+
 
     public static void main(String[] args) {
         new Calculator();
