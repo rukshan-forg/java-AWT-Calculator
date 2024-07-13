@@ -178,6 +178,10 @@ public class Cal extends Frame implements ActionListener {
         }
     }
 
+    public static void main(String[] args) {
+        new Cal();
+    }
+
     Cal() {
         this.setTitle("Calculator");
         this.setLayout(new BorderLayout());
